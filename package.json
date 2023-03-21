@@ -1,11 +1,11 @@
 {
-  "name": "whispermud",
+  "name": "whispermud-core",
   "description": "MUD game engine",
-  "homepage": "https://ranviermud.com",
-  "bugs": "https://github.com/ranviermud/core/issues",
+  "homepage": "",
+  "bugs": "",
   "license": "MIT",
-  "author": "Shawn Biddle (http://shawnbiddle.com)",
-  "version": "3.0.6",
+  "author": "DrunkenImp",
+  "version": "0.0.1",
   "repository": "github:DrunkenImpGameStudio/whispermud-core",
   "engines": {
     "node": ">= 10.12.0"
