@@ -1,14 +1,18 @@
 {
-  "name": "@DrunkenImpGameStudio/whispermud-core",
+  "name": "@drunkenimpgamestudio/whispermud",
   "description": "MUD game engine",
-  "homepage": "",
-  "bugs": "",
   "license": "MIT",
   "author": "DrunkenImp",
   "version": "0.0.1",
-  "repository": "github:DrunkenImpGameStudio/whispermud-core",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DrunkenImpGameStudio/whispermud-core.git"
+  },
   "engines": {
     "node": ">= 10.12.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
     "test": "nyc --reporter=html --reporter=text --include=src --all mocha --recursive",
