@@ -31,4 +31,7 @@
     "mocha": "^5.2.0",
     "nyc": "^13.1.0"
   }
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
 }
