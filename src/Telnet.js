@@ -4,7 +4,7 @@ const EventEmitter = require('events');
 const net = require('net');
 
 // see: arpa/telnet.h
-const Seq = {
+const TelnetSequences = {
   IAC     : 255,
   DONT    : 254,
   DO      : 253,
@@ -16,15 +16,15 @@ const Seq = {
   EOR     : 239,
 };
 
-exports.Sequences = Seq;
+module.exports = TelnetSequences;
 
-const Opts = {
+const TelnetOptions = {
   OPT_ECHO: 1,
   OPT_EOR : 25,
   OPT_GMCP: 201,
 }
 
-exports.Options = Opts;
+exports.Options = TelnetOptions;
 
 class TelnetSocket extends EventEmitter
 {
@@ -60,7 +60,7 @@ class TelnetSocket extends EventEmitter
     // escape IACs by duplicating
     let iacs = 0;
     for (const val of data.values()) {
-      if (val === Seq.IAC) {
+      if (val === TelnetSequences.IAC) {
         iacs++;
       }
     }
@@ -69,8 +69,8 @@ class TelnetSocket extends EventEmitter
       let b = new Buffer(data.length + iacs);
       for (let i = 0, j = 0; i < data.length; i++) {
         b[j++] = data[i];
-        if (data[i] === Seq.IAC) {
-          b[j++] = Seq.IAC;
+        if (data[i] === TelnetSequences.IAC) {
+          b[j++] = TelnetSequences.IAC;
         }
       }
     }
@@ -106,7 +106,7 @@ class TelnetSocket extends EventEmitter
    * @param {number|Array} command     Option to do/don't do or subsequence as array
    */
   telnetCommand(willingness, command) {
-    let seq = [Seq.IAC, willingness];
+    let seq = [TelnetSequences.IAC, willingness];
     if (Array.isArray(command)) {
       seq.push.apply(seq, command);
     } else {
@@ -118,7 +118,7 @@ class TelnetSocket extends EventEmitter
 
   toggleEcho() {
     this.echoing = !this.echoing;
-    this.telnetCommand(this.echoing ? Seq.WONT : Seq.WILL, Opts.OPT_ECHO);
+    this.telnetCommand(this.echoing ? TelnetSequences.WONT : TelnetSequences.WILL, TelnetOptions.OPT_ECHO);
   }
 
   /**
@@ -131,8 +131,8 @@ class TelnetSocket extends EventEmitter
   sendGMCP(gmcpPackage, data) {
     const gmcpData = gmcpPackage + ' ' + JSON.stringify(data);
     const dataBuffer = Buffer.from(gmcpData);
-    const seqStartBuffer = new Buffer([Seq.IAC, Seq.SB, Opts.OPT_GMCP]);
-    const seqEndBuffer = new Buffer([Seq.IAC, Seq.SE]);
+    const seqStartBuffer = new Buffer([TelnetSequences.IAC, TelnetSequences.SB, TelnetOptions.OPT_GMCP]);
+    const seqEndBuffer = new Buffer([TelnetSequences.IAC, TelnetSequences.SE]);
 
     this.socket.write(Buffer.concat([seqStartBuffer, dataBuffer, seqEndBuffer], gmcpData.length + 5));
   }
@@ -155,7 +155,7 @@ class TelnetSocket extends EventEmitter
 
       // immediately start consuming data if we begin receiving normal data
       // instead of telnet negotiation
-      if (connection.fresh && databuf[0] !== Seq.IAC) {
+      if (connection.fresh && databuf[0] !== TelnetSequences.IAC) {
         connection.fresh = false;
       }
 
@@ -223,7 +223,7 @@ class TelnetSocket extends EventEmitter
     let subnegOpt = null;
 
     while (i < inputbuf.length) {
-      if (inputbuf[i] !== Seq.IAC) {
+      if (inputbuf[i] !== TelnetSequences.IAC) {
         if (inputbuf[i] < 32) { // Skip any freaky control codes.
           i++;
         } else {
@@ -235,10 +235,10 @@ class TelnetSocket extends EventEmitter
       const cmd = inputbuf[i + 1];
       const opt = inputbuf[i + 2];
       switch (cmd) {
-        case Seq.DO:
+        case TelnetSequences.DO:
           switch (opt) {
-            case Opts.OPT_EOR:
-              this.gaMode = Seq.EOR;
+            case TelnetOptions.OPT_EOR:
+              this.gaMode = TelnetSequences.EOR;
               break;
             default:
               /**
@@ -250,10 +250,10 @@ class TelnetSocket extends EventEmitter
           }
           i += 3;
           break;
-        case Seq.DONT:
+        case TelnetSequences.DONT:
           switch (opt) {
-            case Opts.OPT_EOR:
-              this.gaMode = Seq.GA;
+            case TelnetOptions.OPT_EOR:
+              this.gaMode = TelnetSequences.GA;
               break;
             default:
               /**
@@ -264,7 +264,7 @@ class TelnetSocket extends EventEmitter
           }
           i += 3;
           break;
-        case Seq.WILL:
+        case TelnetSequences.WILL:
           /**
            * @event TelnetSocket#WILL
            * @param {number} opt
@@ -273,7 +273,7 @@ class TelnetSocket extends EventEmitter
           i += 3;
           break;
           /* falls through */
-        case Seq.WONT:
+        case TelnetSequences.WONT:
           /**
            * @event TelnetSocket#WONT
            * @param {number} opt
@@ -281,18 +281,18 @@ class TelnetSocket extends EventEmitter
           this.emit('WONT', opt);
           i += 3;
           break;
-        case Seq.SB:
+        case TelnetSequences.SB:
           i += 2;
           subnegOpt = inputbuf[i++];
           subnegBuffer = Buffer.alloc(inputbuf.length - i, ' ');
 
           let sublen = 0;
-          while (inputbuf[i] !== Seq.IAC) {
+          while (inputbuf[i] !== TelnetSequences.IAC) {
             subnegBuffer[sublen++] = inputbuf[i++];
           }
           break;
-        case Seq.SE:
-          if (subnegOpt === Opts.OPT_GMCP) {
+        case TelnetSequences.SE:
+          if (subnegOpt === TelnetOptions.OPT_GMCP) {
             let gmcpString = subnegBuffer.toString().trim();
             let [gmcpPackage, ...gmcpData] = gmcpString.split(' ');
             gmcpData = gmcpData.join(' ');
@@ -343,7 +343,7 @@ module.exports = TelnetSocket;
 class TelnetServer
 {
   /**
-   * @param {object}   streamOpts options for the stream @see TelnetSocket
+   * @param {object}   streamTelnetOptions options for the stream @see TelnetSocket
    * @param {function} listener   connected callback
    */
   constructor(listener) {
