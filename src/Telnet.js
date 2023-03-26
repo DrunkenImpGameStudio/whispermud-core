@@ -4,7 +4,7 @@ const EventEmitter = require('events');
 const net = require('net');
 
 // see: arpa/telnet.h
-const TelnetSequences = {
+const Sequences = {
   IAC     : 255,
   DONT    : 254,
   DO      : 253,
@@ -16,15 +16,15 @@ const TelnetSequences = {
   EOR     : 239,
 };
 
-module.exports = TelnetSequences;
+exports.Sequences = Sequences;
 
-const TelnetOptions = {
+const Options = {
   OPT_ECHO: 1,
   OPT_EOR : 25,
   OPT_GMCP: 201,
 }
 
-exports.Options = TelnetOptions;
+exports.Options = Options;
 
 class TelnetSocket extends EventEmitter
 {
@@ -60,7 +60,7 @@ class TelnetSocket extends EventEmitter
     // escape IACs by duplicating
     let iacs = 0;
     for (const val of data.values()) {
-      if (val === TelnetSequences.IAC) {
+      if (val === Sequences.IAC) {
         iacs++;
       }
     }
@@ -69,8 +69,8 @@ class TelnetSocket extends EventEmitter
       let b = new Buffer(data.length + iacs);
       for (let i = 0, j = 0; i < data.length; i++) {
         b[j++] = data[i];
-        if (data[i] === TelnetSequences.IAC) {
-          b[j++] = TelnetSequences.IAC;
+        if (data[i] === Sequences.IAC) {
+          b[j++] = Sequences.IAC;
         }
       }
     }
@@ -106,7 +106,7 @@ class TelnetSocket extends EventEmitter
    * @param {number|Array} command     Option to do/don't do or subsequence as array
    */
   telnetCommand(willingness, command) {
-    let seq = [TelnetSequences.IAC, willingness];
+    let seq = [Sequences.IAC, willingness];
     if (Array.isArray(command)) {
       seq.push.apply(seq, command);
     } else {
@@ -118,7 +118,7 @@ class TelnetSocket extends EventEmitter
 
   toggleEcho() {
     this.echoing = !this.echoing;
-    this.telnetCommand(this.echoing ? TelnetSequences.WONT : TelnetSequences.WILL, TelnetOptions.OPT_ECHO);
+    this.telnetCommand(this.echoing ? Sequences.WONT : Sequences.WILL, Options.OPT_ECHO);
   }
 
   /**
@@ -131,8 +131,8 @@ class TelnetSocket extends EventEmitter
   sendGMCP(gmcpPackage, data) {
     const gmcpData = gmcpPackage + ' ' + JSON.stringify(data);
     const dataBuffer = Buffer.from(gmcpData);
-    const seqStartBuffer = new Buffer([TelnetSequences.IAC, TelnetSequences.SB, TelnetOptions.OPT_GMCP]);
-    const seqEndBuffer = new Buffer([TelnetSequences.IAC, TelnetSequences.SE]);
+    const seqStartBuffer = new Buffer([Sequences.IAC, Sequences.SB, Options.OPT_GMCP]);
+    const seqEndBuffer = new Buffer([Sequences.IAC, Sequences.SE]);
 
     this.socket.write(Buffer.concat([seqStartBuffer, dataBuffer, seqEndBuffer], gmcpData.length + 5));
   }
@@ -155,7 +155,7 @@ class TelnetSocket extends EventEmitter
 
       // immediately start consuming data if we begin receiving normal data
       // instead of telnet negotiation
-      if (connection.fresh && databuf[0] !== TelnetSequences.IAC) {
+      if (connection.fresh && databuf[0] !== Sequences.IAC) {
         connection.fresh = false;
       }
 
@@ -223,7 +223,7 @@ class TelnetSocket extends EventEmitter
     let subnegOpt = null;
 
     while (i < inputbuf.length) {
-      if (inputbuf[i] !== TelnetSequences.IAC) {
+      if (inputbuf[i] !== Sequences.IAC) {
         if (inputbuf[i] < 32) { // Skip any freaky control codes.
           i++;
         } else {
@@ -235,10 +235,10 @@ class TelnetSocket extends EventEmitter
       const cmd = inputbuf[i + 1];
       const opt = inputbuf[i + 2];
       switch (cmd) {
-        case TelnetSequences.DO:
+        case Sequences.DO:
           switch (opt) {
-            case TelnetOptions.OPT_EOR:
-              this.gaMode = TelnetSequences.EOR;
+            case Options.OPT_EOR:
+              this.gaMode = Sequences.EOR;
               break;
             default:
               /**
@@ -250,10 +250,10 @@ class TelnetSocket extends EventEmitter
           }
           i += 3;
           break;
-        case TelnetSequences.DONT:
+        case Sequences.DONT:
           switch (opt) {
-            case TelnetOptions.OPT_EOR:
-              this.gaMode = TelnetSequences.GA;
+            case Options.OPT_EOR:
+              this.gaMode = Sequences.GA;
               break;
             default:
               /**
@@ -264,7 +264,7 @@ class TelnetSocket extends EventEmitter
           }
           i += 3;
           break;
-        case TelnetSequences.WILL:
+        case Sequences.WILL:
           /**
            * @event TelnetSocket#WILL
            * @param {number} opt
@@ -273,7 +273,7 @@ class TelnetSocket extends EventEmitter
           i += 3;
           break;
           /* falls through */
-        case TelnetSequences.WONT:
+        case Sequences.WONT:
           /**
            * @event TelnetSocket#WONT
            * @param {number} opt
@@ -281,18 +281,18 @@ class TelnetSocket extends EventEmitter
           this.emit('WONT', opt);
           i += 3;
           break;
-        case TelnetSequences.SB:
+        case Sequences.SB:
           i += 2;
           subnegOpt = inputbuf[i++];
           subnegBuffer = Buffer.alloc(inputbuf.length - i, ' ');
 
           let sublen = 0;
-          while (inputbuf[i] !== TelnetSequences.IAC) {
+          while (inputbuf[i] !== Sequences.IAC) {
             subnegBuffer[sublen++] = inputbuf[i++];
           }
           break;
-        case TelnetSequences.SE:
-          if (subnegOpt === TelnetOptions.OPT_GMCP) {
+        case Sequences.SE:
+          if (subnegOpt === Options.OPT_GMCP) {
             let gmcpString = subnegBuffer.toString().trim();
             let [gmcpPackage, ...gmcpData] = gmcpString.split(' ');
             gmcpData = gmcpData.join(' ');
@@ -338,12 +338,12 @@ class TelnetSocket extends EventEmitter
   }
 }
 
-module.exports = TelnetSocket;
+exports.TelnetSocket = TelnetSocket;
 
 class TelnetServer
 {
   /**
-   * @param {object}   streamTelnetOptions options for the stream @see TelnetSocket
+   * @param {object}   streamOptions options for the stream @see TelnetSocket
    * @param {function} listener   connected callback
    */
   constructor(listener) {
@@ -354,5 +354,5 @@ class TelnetServer
   }
 }
 
-module.exports = TelnetServer;
+exports.TelnetServer = TelnetServer;
 // vim:ts=2:sw=2:et:
