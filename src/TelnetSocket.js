@@ -1,30 +1,8 @@
 'use strict';
 
 const EventEmitter = require('events');
-const net = require('net');
-
-// see: arpa/telnet.h
-const Seq = {
-  IAC     : 255,
-  DONT    : 254,
-  DO      : 253,
-  WONT    : 252,
-  WILL    : 251,
-  SB      : 250,
-  SE      : 240,
-  GA      : 249,
-  EOR     : 239,
-};
-
-exports.Sequences = Seq;
-
-const Opts = {
-  OPT_ECHO: 1,
-  OPT_EOR : 25,
-  OPT_GMCP: 201,
-}
-
-exports.Options = Opts;
+const Seq = require('./TelnetSequences');
+const Opts = require('./TelnetOptions');
 
 class TelnetSocket extends EventEmitter
 {
@@ -338,22 +316,4 @@ class TelnetSocket extends EventEmitter
   }
 }
 
-exports.TelnetSocket = TelnetSocket;
-
-class TelnetServer
-{
-  /**
-   * @param {object}   streamOpts options for the stream @see TelnetSocket
-   * @param {function} listener   connected callback
-   */
-  constructor(listener) {
-    this.netServer = net.createServer({}, (socket) => {
-      socket.fresh = true;
-      listener(socket);
-    });
-  }
-}
-
-exports.TelnetServer = TelnetServer;
-
-// vim:ts=2:sw=2:et:
+module.exports = TelnetSocket;
