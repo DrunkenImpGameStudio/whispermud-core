@@ -1,5 +1,7 @@
 'use strict';
 const bcrypt = require('bcryptjs');
+const EventEmitter = require('events');
+const Metadatable = require('./Metadatable');
 const Data   = require('./Data');
 
 /**
@@ -9,13 +11,16 @@ const Data   = require('./Data');
  * @property {Array<string>} characters List of character names in this account
  * @property {string} password Hashed password
  * @property {boolean} banned Whether this account is banned or not
+ * @extends EventEmitter
+ * @mixes Metadatable
  */
-class Account {
+class Account extends Metadatable(EventEmitter) {
 
   /**
    * @param {Object} data Account save data
    */
   constructor(data) {
+    super();
     this.username   = data.username;
     this.characters = data.characters || [];
     this.password   = data.password;

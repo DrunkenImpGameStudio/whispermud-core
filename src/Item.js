@@ -35,7 +35,7 @@ const { Inventory, InventoryFullError } = require('./Inventory');
  */
 class Item extends GameEntity {
   constructor (area, item) {
-    super();
+    super(item);
     const validate = ['keywords', 'name', 'id'];
 
     for (const prop of validate) {
@@ -204,10 +204,7 @@ class Item extends GameEntity {
   }
 
   hydrate(state, serialized = {}) {
-    if (this.__hydrated) {
-      Logger.warn('Attempted to hydrate already hydrated item.');
-      return false;
-    }
+    super.hydrate(state);
 
     // perform deep copy if behaviors is set to prevent sharing of the object between
     // item instances
@@ -230,6 +227,8 @@ class Item extends GameEntity {
       this.area = state.AreaManager.getArea(this.area);
     }
 
+    state.ItemManager.add(this);
+
     // if the item was saved with a custom inventory hydrate it
     if (this.inventory) {
       this.inventory.hydrate(state, this);
@@ -241,19 +240,23 @@ class Item extends GameEntity {
         newItem.hydrate(state);
         state.ItemManager.add(newItem);
         this.addItem(newItem);
+
+        /**
+          * @event Item#spawn
+          */
+        newItem.emit('spawn');
       });
     }
-
-    this.__hydrated = true;
   }
 
   serialize() {
+    const data = super.serialize();
     let behaviors = {};
     for (const [key, val] of this.behaviors) {
       behaviors[key] = val;
     }
 
-    return {
+    return Object.assign(data,{
       entityReference: this.entityReference,
       inventory: this.inventory && this.inventory.serialize(),
 
@@ -272,7 +275,7 @@ class Item extends GameEntity {
       // behaviors are serialized in case their config was modified during gameplay
       // and that state needs to persist (charges of a scroll remaining, etc)
       behaviors,
-    };
+    });
   }
 }
 

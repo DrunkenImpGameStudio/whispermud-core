@@ -23,7 +23,7 @@ const AreaFloor = require('./AreaFloor');
  */
 class Area extends GameEntity {
   constructor(bundle, name, manifest) {
-    super();
+    super(manifest);
     this.bundle = bundle;
     this.name = name;
     this.title = manifest.title;
@@ -88,6 +88,7 @@ class Area extends GameEntity {
    */
   removeRoom(room) {
     this.rooms.delete(room.id);
+    this.removeRoomFromMap(room);
 
     /**
      * @event Area#roomRemoved
@@ -113,6 +114,21 @@ class Area extends GameEntity {
 
     const floor = this.map.get(z);
     floor.addRoom(x, y, room);
+  }
+
+  removeRoomFromMap(room) {
+    if (!room.coordinates) {
+      throw new Error('Room does not have coordinates');
+    }
+
+    const {x, y, z} = room.coordinates;
+
+    if (!this.map.has(z)) {
+      throw new Error(`That floor doesn't exist`);
+    }
+
+    const floor = this.map.get(z);
+    floor.removeRoom(x, y);
   }
 
   /**

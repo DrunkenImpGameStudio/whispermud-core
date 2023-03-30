@@ -105,6 +105,11 @@ class Inventory extends Map {
       newItem.hydrate(state, def);
       this.set(uuid, newItem);
       state.ItemManager.add(newItem);
+      
+      /**
+        * @event Item#spawn
+        */
+      newItem.emit('spawn');
     }
   }
 }
