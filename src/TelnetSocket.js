@@ -137,7 +137,7 @@ class TelnetSocket extends EventEmitter
         connection.fresh = false;
       }
 
-      databuf = inputbuf.slice(0, inputlen);
+      databuf = inputbuf.subarray(0, inputlen);
       // fresh makes sure that even if we haven't gotten a newline but the client
       // sent us some initial negotiations to still interpret them
       if (!databuf.toString().match(/[\r\n]/) && !connection.fresh) {
