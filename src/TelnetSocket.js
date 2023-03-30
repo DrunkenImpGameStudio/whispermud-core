@@ -165,7 +165,7 @@ class TelnetSocket extends EventEmitter
         this.input(Buffer.from(bucket));
       }
 
-      inputbuf = Buffer.from(this.maxInputLength);
+      inputbuf = Buffer.alloc(this.maxInputLength);
       inputlen = 0;
     });
 
