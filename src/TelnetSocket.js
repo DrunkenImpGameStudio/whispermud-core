@@ -32,7 +32,7 @@ class TelnetSocket extends EventEmitter
 
   write(data, encoding) {
     if (!Buffer.isBuffer(data)) {
-      data = new Buffer(data, encoding);
+      data = Buffer.from(data, encoding);
     }
 
     // escape IACs by duplicating
@@ -44,7 +44,7 @@ class TelnetSocket extends EventEmitter
     }
 
     if (iacs) {
-      let b = new Buffer(data.length + iacs);
+      let b = Buffer.from(data.length + iacs);
       for (let i = 0, j = 0; i < data.length; i++) {
         b[j++] = data[i];
         if (data[i] === Seq.IAC) {
@@ -117,7 +117,7 @@ class TelnetSocket extends EventEmitter
 
   attach(connection) {
     this.socket = connection;
-    let inputbuf = new Buffer(this.maxInputLength);
+    let inputbuf = Buffer.from(this.maxInputLength);
     let inputlen = 0;
 
     /**
@@ -165,7 +165,7 @@ class TelnetSocket extends EventEmitter
         this.input(Buffer.from(bucket));
       }
 
-      inputbuf = new Buffer(this.maxInputLength);
+      inputbuf = Buffer.from(this.maxInputLength);
       inputlen = 0;
     });
 
@@ -312,7 +312,7 @@ class TelnetSocket extends EventEmitter
      * @event TelnetSocket#data
      * @param {Buffer} data
      */
-    this.emit('data', cleanbuf.slice(0, cleanlen >= cleanbuf.length ? undefined : cleanlen));  // special processing required for slice() to work.
+    this.emit('data', cleanbuf.subarray(0, cleanlen >= cleanbuf.length ? undefined : cleanlen));  // special processing required.
   }
 }
 
