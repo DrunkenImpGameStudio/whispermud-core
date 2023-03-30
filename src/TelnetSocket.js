@@ -109,8 +109,8 @@ class TelnetSocket extends EventEmitter
   sendGMCP(gmcpPackage, data) {
     const gmcpData = gmcpPackage + ' ' + JSON.stringify(data);
     const dataBuffer = Buffer.from(gmcpData);
-    const seqStartBuffer = new Buffer([Seq.IAC, Seq.SB, Opts.OPT_GMCP]);
-    const seqEndBuffer = new Buffer([Seq.IAC, Seq.SE]);
+    const seqStartBuffer = Buffer.from([Seq.IAC, Seq.SB, Opts.OPT_GMCP]);
+    const seqEndBuffer = Buffer.from([Seq.IAC, Seq.SE]);
 
     this.socket.write(Buffer.concat([seqStartBuffer, dataBuffer, seqEndBuffer], gmcpData.length + 5));
   }
