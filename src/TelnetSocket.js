@@ -91,7 +91,7 @@ class TelnetSocket extends EventEmitter
       seq.push(command);
     }
 
-    this.socket.write(new Buffer(seq));
+    this.socket.write(Buffer.from(seq));
   }
 
   toggleEcho() {
