@@ -117,7 +117,7 @@ class TelnetSocket extends EventEmitter
 
   attach(connection) {
     this.socket = connection;
-    let inputbuf = Buffer.from(this.maxInputLength);
+    let inputbuf = Buffer.alloc(this.maxInputLength);
     let inputlen = 0;
 
     /**
